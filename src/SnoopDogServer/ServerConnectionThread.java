@@ -63,6 +63,7 @@ public class ServerConnectionThread extends Thread {
                 }
                 else if (textIn.equals("stop audio")) { /* User sent a "stop audio" request */
                     System.out.println("Received: " + textIn);
+                    server.soundThread.setSaveAudio(false);
 
 
                     /*

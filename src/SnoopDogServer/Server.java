@@ -32,9 +32,10 @@ public class Server {
         new Server();
     }
 
-    public void stopServer() {
+    public synchronized void stopServer() {
         this.shouldRun = false;
     }
+
 
     public Server() {
 
@@ -72,7 +73,7 @@ public class Server {
                 connections.add(sc);
 
                 /* Start send audio thread for the accepted connection */
-                sendAudioThread = new SendAudioThread(sc, this, messagingTaskQueue, soundQueue);
+                sendAudioThread = new SendAudioThread(sc, this , soundQueue);
                 sendAudioThread.start();
             }
 
