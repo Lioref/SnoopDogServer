@@ -14,14 +14,12 @@ public class SendAudioThread extends Thread {
 
     private volatile boolean shouldRun;
     private Server server;
-    private Queue<ServerTask> taskQueue;
     private Queue<byte[]> soundQueue;
     private ServerConnectionThread sc;
 
-    public SendAudioThread(ServerConnectionThread sc, Server server, Queue<ServerTask> taskQueue, Queue<byte[]> soundQueue) {
+    public SendAudioThread(ServerConnectionThread sc, Server server, Queue<byte[]> soundQueue) {
         super("SendAudioThread");
         this.server = server;
-        this.taskQueue = taskQueue;
         this.soundQueue = soundQueue;
         this.sc = sc;
 
