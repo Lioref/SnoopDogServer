@@ -19,7 +19,7 @@ public class SoundThread extends Thread {
     private SourceDataLine sourceLine;
     private TargetDataLine targetLine;
     private Server server;
-    private boolean saveAudio;
+    private volatile boolean saveAudio;
 
 
     public SoundThread(Server server, ByteArrayOutputStream out, Queue<ServerTask> taskQueue, Queue<byte[]> soundQueue) {
@@ -132,7 +132,7 @@ public class SoundThread extends Thread {
         */
     }
 
-    public void setSaveAudio(boolean bool) {
+    public synchronized void setSaveAudio(boolean bool) {
         this.saveAudio = bool;
     }
 
