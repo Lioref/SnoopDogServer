@@ -24,7 +24,9 @@ public class MessagingThread extends Thread {
 
     public void sendBarkToClient(ServerConnectionThread sc) {
         try {
-            sc.outToClient.writeInt(BARK); /* Sending int indicator for barking */
+            synchronized (sc.outToClient) {
+                sc.outToClient.writeInt(BARK); /* Sending int indicator for barking */
+            }
         } catch (SocketException e) {
             server.lostConnections.add(sc); /* client disconnected */
         } catch (IOException e) {
@@ -35,7 +37,9 @@ public class MessagingThread extends Thread {
 
     private void sendBarkToAllClients() {
         for (ServerConnectionThread sc : server.connections) {
-            sendBarkToClient(sc);
+            if (!sc.isStreaming) {
+                sendBarkToClient(sc);
+            }
         }
 
     }
