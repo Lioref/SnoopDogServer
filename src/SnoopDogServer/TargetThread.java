@@ -6,9 +6,11 @@ import javax.sound.sampled.TargetDataLine;
 import java.io.ByteArrayOutputStream;
 
 public class TargetThread extends Thread {
+    private volatile boolean shouldRun = true;
+
+
     private TargetDataLine targetLine;
     private ByteArrayOutputStream out;
-    private volatile boolean shouldRun = true;
 
     public TargetThread(TargetDataLine targetLine, ByteArrayOutputStream out) {
         super("TargetThread");
@@ -22,7 +24,7 @@ public class TargetThread extends Thread {
     }
 
     public void startRecording() {
-        System.out.println("Start recording...");
+        //System.out.println("Start recording...");
         targetLine.start();
         byte[] data = new byte[targetLine.getBufferSize() / 5];
         int readBytes;
@@ -34,7 +36,7 @@ public class TargetThread extends Thread {
     }
 
     public void stopRecording() {
-        System.out.println("Stop recording...");
+        //System.out.println("Stop recording...");
         targetLine.stop();
     }
 
