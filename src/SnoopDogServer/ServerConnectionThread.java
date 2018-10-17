@@ -9,23 +9,20 @@ import java.util.Queue;
 public class ServerConnectionThread extends Thread {
 
     private volatile boolean shouldRun = true;
+    public volatile boolean isStreaming = false;
 
 
-    boolean disconnectFlag = false;
+    private boolean disconnectFlag = false;
     Socket socket;
     private Server server;
     private BufferedReader inFromClient;
     DataOutputStream outToClient;
-    private Queue<ServerTask> taskQueue;
-    private Queue<byte[]> soundQueue;
 
 
-    public ServerConnectionThread(Socket socket, Server server, Queue<ServerTask> taskQueue, Queue<byte[]> soundQueue) {
+    public ServerConnectionThread(Socket socket, Server server) {
         super("ServerConnectionThread");
         this.socket = socket;
         this.server = server;
-        this.taskQueue = taskQueue;
-        this.soundQueue = soundQueue;
     }
 
     public void kill() {
@@ -37,6 +34,7 @@ public class ServerConnectionThread extends Thread {
         try {
             inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             outToClient = new DataOutputStream(socket.getOutputStream());
+            StreamerThread streamerThread = new StreamerThread(server, this);
             String textIn = "";
 
             while (shouldRun) {
@@ -50,26 +48,21 @@ public class ServerConnectionThread extends Thread {
 
                 textIn = inFromClient.readLine().toLowerCase();
 
+                // Check that it's not already in send audio mode
                 if (textIn.equals("send audio")) { /* User sent a "send audio" request */
                     System.out.println("Received: " + textIn);
-                    server.soundThread.setSaveAudio(true);
-
-                    /*
-                    AudioStreamerThread audioStreamerThread = new AudioStreamerThread(this);
-                    audioStreamerThread.start();
-                    ServerTask newTask = new ServerTask("Send audio", this, false);
-                    taskQueue.add(newTask);
-                    */
+                    if (!this.isStreaming) {
+                        this.isStreaming = true;
+                        streamerThread.start();
+                    }
                 }
                 else if (textIn.equals("stop audio")) { /* User sent a "stop audio" request */
                     System.out.println("Received: " + textIn);
-                    server.soundThread.setSaveAudio(false);
-
-
-                    /*
-                    ServerTask newTask = new ServerTask("Stop audio", this, false);
-                    taskQueue.add(newTask);
-                    */
+                    streamerThread.kill();
+                    if (this.isStreaming) {
+                        this.isStreaming = false;
+                        streamerThread = new StreamerThread(server, this);
+                    }
                 }
                 else if (textIn.equals("play command")) {
                     server.commandThread.setPlayCommand(1);

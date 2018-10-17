@@ -18,14 +18,11 @@ public class Server {
     protected SoundThread soundThread;
     protected PlayCommandThread commandThread;
     protected ClientDisconnectThread clientDisconnectThread;
-    protected SendAudioThread sendAudioThread;
 
     /* Data-Structures */
     protected ArrayList<ServerConnectionThread> connections = new ArrayList<>();
     protected Queue<ServerConnectionThread> lostConnections;
     protected Queue<ServerTask> messagingTaskQueue;
-    protected Queue<byte[]> soundQueue;
-
 
 
     public static void main(String[] args) {
@@ -41,7 +38,6 @@ public class Server {
 
         /* Init data structures */
         this.messagingTaskQueue = new ConcurrentLinkedQueue<>();
-        this.soundQueue = new ConcurrentLinkedQueue<>();
         this.lostConnections = new ConcurrentLinkedQueue<>();
 
 
@@ -52,7 +48,7 @@ public class Server {
             messagingThread.start();
 
             /* Start listen for barking thread */
-            this.soundThread = new SoundThread(this, out, messagingTaskQueue, soundQueue);
+            this.soundThread = new SoundThread(this, out, messagingTaskQueue);
             soundThread.start();
 
             /* Start the client disconnect thread */
@@ -68,13 +64,11 @@ public class Server {
             while (shouldRun) {
                 /* accept connections - Blocking */
                 Socket clientSocket = serverSocket.accept(); /* This line is blocking by design */
-                ServerConnectionThread sc = new ServerConnectionThread(clientSocket, this, messagingTaskQueue, soundQueue);
+                ServerConnectionThread sc = new ServerConnectionThread(clientSocket, this);
                 sc.start();
+
                 connections.add(sc);
 
-                /* Start send audio thread for the accepted connection */
-                sendAudioThread = new SendAudioThread(sc, this , soundQueue);
-                sendAudioThread.start();
             }
 
         } catch (IOException e) {
