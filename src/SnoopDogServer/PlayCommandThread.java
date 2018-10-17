@@ -7,7 +7,7 @@ import java.net.URL;
 
 public class PlayCommandThread extends Thread {
 
-    private static int commandID; /* Will indicate which command to play: 0 means play nothing */
+    private volatile static int commandID; /* Will indicate which command to play: 0 means play nothing */
     private volatile boolean shouldRun = true;
     Server server;
 
