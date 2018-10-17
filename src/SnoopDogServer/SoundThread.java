@@ -12,6 +12,8 @@ public class SoundThread extends Thread {
     private static final int CLIPTIME = 1000; /* The length of each recording should be changed here */
     
     private volatile boolean shouldRun;
+    private boolean saveAudio;
+
     private Queue<ServerTask> taskQueue;
     private Queue<byte[]> soundQueue;
 
@@ -19,10 +21,9 @@ public class SoundThread extends Thread {
     private SourceDataLine sourceLine;
     private TargetDataLine targetLine;
     private Server server;
-    private volatile boolean saveAudio;
 
 
-    public SoundThread(Server server, ByteArrayOutputStream out, Queue<ServerTask> taskQueue, Queue<byte[]> soundQueue) {
+    public SoundThread(Server server, ByteArrayOutputStream out, Queue<ServerTask> taskQueue) {
         super("SoundThread");
         try {
             /* Init targetDataLine - a DataLine from which audio data can be read*/
@@ -54,10 +55,8 @@ public class SoundThread extends Thread {
     public void run() {
         shouldRun = true;
         saveAudio = false;
-        int loudnessInt;
 
         TargetThread targetThread;
-        SourceThread sourceThread;
 
         try {
             targetLine.open();
@@ -78,37 +77,12 @@ public class SoundThread extends Thread {
 
                 /* Calculate loudness */
                 byte[] audioData = out.toByteArray();
-                loudnessInt = SoundLib.calculateRMSLevel(audioData); /* For debug */
-                System.out.println(loudnessInt); /* For debug */
-
                 if (SoundLib.isLoud(SoundLib.calculateRMSLevel(audioData))) {
                     /* Add a broadCast task to send message */
                     ServerTask newTask = new ServerTask("Send message", null, true);
                     taskQueue.add(newTask);
                     System.out.println("added task to send message");
                 }
-
-                if (saveAudio) { /* Indicator for saving audio after user request */
-                    soundQueue.add(audioData);
-                    System.out.println("Added audio");
-                }
-
-                /* If all connections are lost - empty the soundQueue (to avoid sound delays) */
-                if (server.connections.isEmpty()) {
-                    saveAudio = false;
-                    while(!soundQueue.isEmpty()) {
-                        soundQueue.remove();
-                    }
-                }
-
-                /* Init sourceThread to play, once done, kill thread */
-                /*
-                sourceThread.start();
-                sleep(CLIPTIME);
-                sourceThread.stopPlaying();
-                sourceLine.flush();
-                sourceThread.kill();
-                */
 
                 /* Clean out */
                 out.flush();
@@ -130,10 +104,6 @@ public class SoundThread extends Thread {
         /*
         this.sourceLine.close();
         */
-    }
-
-    public synchronized void setSaveAudio(boolean bool) {
-        this.saveAudio = bool;
     }
 
 }
